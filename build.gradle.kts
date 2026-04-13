@@ -2,11 +2,11 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.spotbugs.snom.SpotBugsTask
 import java.nio.charset.StandardCharsets.UTF_8
 
-val linkHomepage by extra("https://allurereport.org/")
-val linkCi by extra("https://ci.qameta.io/job/allure2")
-val linkScmUrl by extra("https://github.com/allure-framework/allure2")
-val linkScmConnection by extra("scm:git:git://github.com/allure-framework/allure2.git")
-val linkScmDevConnection by extra("scm:git:ssh://git@github.com:allure-framework/allure2.git")
+val linkHomepage by extra("https://github.com/wolke1007/allure2")
+val linkCi by extra("https://github.com/wolke1007/allure2/actions")
+val linkScmUrl by extra("https://github.com/wolke1007/allure2")
+val linkScmConnection by extra("scm:git:git://github.com/wolke1007/allure2.git")
+val linkScmDevConnection by extra("scm:git:ssh://git@github.com:wolke1007/allure2.git")
 
 val root = rootProject.projectDir
 val gradleScriptDir by extra("$root/gradle")
@@ -46,7 +46,7 @@ allprojects {
 }
 
 description = "Allure Report"
-group = "io.qameta.allure"
+group = "io.github.wolke1007"
 
 nexusPublishing {
     repositories {
@@ -59,9 +59,9 @@ nexusPublishing {
 
 subprojects {
     group = if (project.name.endsWith("plugin")) {
-        "io.qameta.allure.plugins"
+        "io.github.wolke1007.plugins"
     } else {
-        "io.qameta.allure"
+        "io.github.wolke1007"
     }
     version = version
 
@@ -256,11 +256,11 @@ subprojects {
                 suppressAllPomMetadataWarnings()
                 pom {
                     name.set(project.name)
-                    description.set("Module ${project.name} of Allure Framework.")
-                    url.set("https://allurereport.org/")
+                    description.set("Module ${project.name} of Allure Framework (fork by wolke1007 with streaming memory optimization).")
+                    url.set("https://github.com/wolke1007/allure2")
                     organization {
-                        name.set("Qameta Software")
-                        url.set("https://qameta.io/")
+                        name.set("wolke1007")
+                        url.set("https://github.com/wolke1007")
                     }
                     licenses {
                         license {
@@ -270,30 +270,23 @@ subprojects {
                     }
                     developers {
                         developer {
-                            id.set("baev")
-                            name.set("Dmitry Baev")
-                            email.set("dmitry.baev@qameta.io")
-                            url.set("https://github.com/baev")
-                        }
-                        developer {
-                            id.set("eroshenkoam")
-                            name.set("Artem Eroshenko")
-                            email.set("artem.eroshenko@qameta.io")
-                            url.set("https://github.com/eroshenkoam")
+                            id.set("wolke1007")
+                            name.set("wolke1007")
+                            url.set("https://github.com/wolke1007")
                         }
                     }
                     scm {
-                        developerConnection.set("scm:git:git://github.com/allure-framework/allure2")
-                        connection.set("scm:git:git://github.com/allure-framework/allure2")
-                        url.set("https://github.com/allure-framework/allure2")
+                        developerConnection.set("scm:git:ssh://git@github.com:wolke1007/allure2.git")
+                        connection.set("scm:git:git://github.com/wolke1007/allure2.git")
+                        url.set("https://github.com/wolke1007/allure2")
                     }
                     issueManagement {
                         system.set("GitHub Issues")
-                        url.set("https://github.com/allure-framework/allure2/issues")
+                        url.set("https://github.com/wolke1007/allure2/issues")
                     }
                     ciManagement {
                         system.set("Github Actions")
-                        url.set("https://github.com/allure-framework/allure-java/actions")
+                        url.set("https://github.com/wolke1007/allure2/actions")
                     }
                     versionMapping {
                         usage("java-api") {

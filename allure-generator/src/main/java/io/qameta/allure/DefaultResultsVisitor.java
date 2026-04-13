@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import static java.nio.file.Files.newInputStream;
 import static java.nio.file.Files.size;
@@ -62,8 +63,22 @@ public class DefaultResultsVisitor implements ResultsVisitor {
 
     private final Map<String, Object> extra;
 
+    private final Consumer<TestResult> onTestResult;
+
     public DefaultResultsVisitor(final Configuration configuration) {
+        this(configuration, null);
+    }
+
+    /**
+     * Streaming constructor: instead of accumulating TestResults in memory,
+     * each result is passed to the provided callback immediately after conversion.
+     * This allows the caller to write the result to disk and free the step tree
+     * before the next result is processed.
+     */
+    public DefaultResultsVisitor(final Configuration configuration,
+                                 final Consumer<TestResult> onTestResult) {
         this.configuration = configuration;
+        this.onTestResult = onTestResult;
         this.results = ConcurrentHashMap.newKeySet();
         this.attachments = new ConcurrentHashMap<>();
         this.extra = new ConcurrentHashMap<>();
@@ -92,7 +107,11 @@ public class DefaultResultsVisitor implements ResultsVisitor {
 
     @Override
     public void visitTestResult(final TestResult result) {
-        results.add(result);
+        if (onTestResult != null) {
+            onTestResult.accept(result);
+        } else {
+            results.add(result);
+        }
     }
 
     @Override
@@ -113,6 +132,18 @@ public class DefaultResultsVisitor implements ResultsVisitor {
     public LaunchResults getLaunchResults() {
         return new DefaultLaunchResults(
                 Collections.unmodifiableSet(results),
+                Collections.unmodifiableMap(attachments),
+                Collections.unmodifiableMap(extra)
+        );
+    }
+
+    /**
+     * Streaming variant: builds LaunchResults using the externally-accumulated stripped results
+     * instead of the visitor's internal set (which is empty in streaming mode).
+     */
+    public LaunchResults getLaunchResults(final Set<TestResult> overrideResults) {
+        return new DefaultLaunchResults(
+                Collections.unmodifiableSet(overrideResults),
                 Collections.unmodifiableMap(attachments),
                 Collections.unmodifiableMap(extra)
         );
