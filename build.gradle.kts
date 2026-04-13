@@ -306,6 +306,7 @@ subprojects {
     // Just in case Maven Central rejects signed snapshots for some reason
     if (!version.toString().endsWith("-SNAPSHOT")) {
         signing {
+            useGpgCmd()
             sign(publishing.publications["maven"])
         }
     }
