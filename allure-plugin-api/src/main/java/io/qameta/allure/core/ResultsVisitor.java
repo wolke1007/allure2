@@ -68,4 +68,15 @@ public interface ResultsVisitor {
      */
     void error(String message);
 
+    /**
+     * Returns {@code true} when the reader should process files sequentially
+     * to minimise peak heap usage. Readers must skip {@code .parallel()} on
+     * file-reading streams when this returns {@code true}.
+     *
+     * <p>Defaults to {@code false} (parallel) for backwards compatibility.
+     */
+    default boolean isSequential() {
+        return false;
+    }
+
 }

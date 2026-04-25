@@ -156,6 +156,7 @@ public class ReportGenerator {
      */
     private void generateStreaming(final ReportStorage storage,
                                    final List<Path> resultsDirectories) {
+        LOGGER.info("Streaming generate mode enabled (sequential read + per-file System.gc())");
         final List<LaunchResults> launchMetadata = new ArrayList<>();
         resultsDirectories.stream()
                 .filter(this::isValidResultsDirectory)

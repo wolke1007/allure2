@@ -115,6 +115,11 @@ public class DefaultResultsVisitor implements ResultsVisitor {
     }
 
     @Override
+    public boolean isSequential() {
+        return onTestResult != null;
+    }
+
+    @Override
     public void visitExtra(final String name, final Object object) {
         extra.put(name, object);
     }
