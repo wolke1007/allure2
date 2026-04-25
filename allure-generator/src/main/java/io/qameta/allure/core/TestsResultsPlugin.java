@@ -30,6 +30,11 @@ import java.util.stream.Collectors;
 public class TestsResultsPlugin implements Aggregator2 {
 
     @Override
+    public boolean isTestCaseFileWriter() {
+        return true;
+    }
+
+    @Override
     public void aggregate(final Configuration configuration,
                           final List<LaunchResults> launchesResults,
                           final ReportStorage storage) {

@@ -20,7 +20,7 @@ import io.qameta.allure.core.FileSystemReportStorage;
 import io.qameta.allure.core.InMemoryReportStorage;
 import io.qameta.allure.core.LaunchResults;
 import io.qameta.allure.core.ReportWebGenerator;
-import io.qameta.allure.core.TestsResultsPlugin;
+import io.qameta.allure.entity.StageResult;
 import io.qameta.allure.entity.TestResult;
 import io.qameta.allure.util.DeleteVisitor;
 import org.slf4j.Logger;
@@ -184,8 +184,10 @@ public class ReportGenerator {
                             String.format("data/test-cases/%s", testResult.getSource()),
                             testResult
                     );
-                    // Drop the step/attachment trees so they can be GC'd
-                    testResult.setTestStage(null);
+                    // Drop the step/attachment trees so they can be GC'd.
+                    // Use empty StageResult (not null) so aggregators calling
+                    // getTestStage().getSteps() don't NPE on stripped results.
+                    testResult.setTestStage(new StageResult());
                     testResult.getBeforeStages().clear();
                     testResult.getAfterStages().clear();
                     // Keep the lightweight metadata for subsequent aggregators
@@ -207,7 +209,7 @@ public class ReportGenerator {
                                     final ReportStorage storage) {
         processOldAggregators(launchMetadata, storage);
         for (final Aggregator2 aggregator : configuration.getExtensions(Aggregator2.class)) {
-            if (aggregator instanceof TestsResultsPlugin) {
+            if (aggregator.isTestCaseFileWriter()) {
                 // Already handled: each test-case JSON was written during the streaming read phase.
                 // Skipping here prevents overwriting the full results with stripped ones.
                 continue;

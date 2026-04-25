@@ -32,6 +32,17 @@ public interface Aggregator2 extends Extension {
     /**
      * Process report data.
      *
+     * <p><b>Streaming-mode contract:</b> when the report is generated in streaming
+     * mode ({@code allure.streaming.generate=true}), each {@link io.qameta.allure.entity.TestResult}
+     * inside {@code launchesResults} has its stage trees stripped
+     * ({@code testStage} is an empty {@link io.qameta.allure.entity.StageResult},
+     * {@code beforeStages} and {@code afterStages} are empty lists).
+     * The full step/attachment data has already been written to
+     * {@code data/test-cases/*.json} during the read phase.
+     * Aggregators that only consume metadata (status, labels, parameters, etc.)
+     * are unaffected; aggregators that read step trees must not be used in
+     * streaming mode.
+     *
      * @param configuration   the report configuration.
      * @param launchesResults all the parsed test results.
      * @param storage         the report storage.
@@ -39,5 +50,20 @@ public interface Aggregator2 extends Extension {
     void aggregate(Configuration configuration,
                    List<LaunchResults> launchesResults,
                    ReportStorage storage);
+
+    /**
+     * Returns {@code true} when this aggregator writes per-test-case files
+     * (e.g. {@code data/test-cases/*.json}) to storage.
+     *
+     * <p>The streaming generate path skips such aggregators because
+     * test-case files are already written during the read phase.
+     * Override to return {@code true} in any aggregator that produces
+     * {@code data/test-cases/*} entries.
+     *
+     * <p>Defaults to {@code false}.
+     */
+    default boolean isTestCaseFileWriter() {
+        return false;
+    }
 
 }
