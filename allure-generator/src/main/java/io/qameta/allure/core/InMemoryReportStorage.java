@@ -67,6 +67,16 @@ public class InMemoryReportStorage implements ReportStorage {
         }
     }
 
+    @Override
+    public byte[] readDataBinary(final String name) {
+        final String encoded = reportDataFiles.get(name);
+        if (encoded == null) {
+            throw new UncheckedIOException(
+                    new IOException("No data stored under name: " + name));
+        }
+        return Base64.getDecoder().decode(encoded);
+    }
+
     public Map<String, String> getReportDataFiles() {
         return Collections.unmodifiableMap(reportDataFiles);
     }

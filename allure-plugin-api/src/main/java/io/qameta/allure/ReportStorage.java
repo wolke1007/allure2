@@ -28,4 +28,23 @@ public interface ReportStorage {
 
     void addDataFile(String name, Path file);
 
+    /**
+     * Reads previously written data back as raw bytes. Used by streaming generate mode
+     * to merge late-bound aggregator output (e.g. tags/severity/categories) into already
+     * persisted test-case JSON without keeping the full result tree in memory.
+     *
+     * <p>Default implementation throws {@link UnsupportedOperationException} so existing
+     * third-party storage implementations remain source-compatible. Implementations that
+     * support read-back must override this method.
+     *
+     * @param name the resource name previously passed to {@code addDataJson} or
+     *             {@code addDataBinary}
+     * @return the raw bytes that were written
+     * @throws UnsupportedOperationException if this storage does not support reading
+     */
+    default byte[] readDataBinary(String name) {
+        throw new UnsupportedOperationException(
+                "This storage does not support reading data back: " + getClass().getName());
+    }
+
 }

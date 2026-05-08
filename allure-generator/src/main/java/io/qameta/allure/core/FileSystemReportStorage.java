@@ -73,6 +73,16 @@ public class FileSystemReportStorage implements ReportStorage {
         }
     }
 
+    @Override
+    public byte[] readDataBinary(final String name) {
+        final Path target = getPath(name);
+        try {
+            return Files.readAllBytes(target);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     private Path getPath(final String name) {
         final Path normalized = checkPath(name);
         final Path target = dataDirectory.resolve(normalized);

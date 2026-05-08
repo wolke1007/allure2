@@ -15,6 +15,7 @@
  */
 package io.qameta.allure;
 
+import io.qameta.allure.context.JacksonContext;
 import io.qameta.allure.core.Configuration;
 import io.qameta.allure.core.FileSystemReportStorage;
 import io.qameta.allure.core.InMemoryReportStorage;
@@ -202,8 +203,13 @@ public class ReportGenerator {
     }
 
     /**
-     * Runs all aggregators in streaming mode, skipping {@link TestsResultsPlugin} because
-     * the test-case files were already written during {@link #streamingReadDir}.
+     * Runs all aggregators in streaming mode, then merges the aggregator-supplied
+     * {@code extra} blocks (tags, severity, categories, owner, retry, history, ...) back
+     * into the on-disk test-case JSON via {@link #mergeExtraIntoTestCases}.
+     *
+     * <p>{@link TestsResultsPlugin} is skipped because the test-case files were already
+     * written during {@link #streamingReadDir} and the in-memory results are stripped of
+     * step trees — letting it run would overwrite the full JSON with metadata-only data.
      */
     private void aggregateStreaming(final List<LaunchResults> launchMetadata,
                                     final ReportStorage storage) {
@@ -216,6 +222,63 @@ public class ReportGenerator {
             }
             aggregator.aggregate(configuration, launchMetadata, storage);
         }
+        mergeExtraIntoTestCases(launchMetadata, storage);
+    }
+
+    /**
+     * Streaming finalize phase: for each in-memory stripped result, re-reads the step tree
+     * from the on-disk test-case JSON (written during the reader phase) and writes the
+     * stripped result back with that step tree restored.
+     *
+     * <p>The stripped result already carries every aggregator-supplied mutation:
+     * <ul>
+     *   <li>{@code extra} blocks from TagsPlugin / SeverityPlugin / CategoriesPlugin /
+     *       OwnerPlugin / RetryPlugin / HistoryPlugin</li>
+     *   <li>top-level {@code descriptionHtml} from MarkdownDescriptionsPlugin</li>
+     *   <li>top-level {@code labels} extended by TagsPlugin (allure.label.X expansion)</li>
+     *   <li>retry flags ({@code retriesCount}, {@code retriesStatusChange}, {@code hidden},
+     *       {@code retry}) from RetryPlugin</li>
+     *   <li>history flags ({@code flaky}, {@code newFailed}, {@code newBroken},
+     *       {@code newPassed}) from HistoryPlugin</li>
+     * </ul>
+     * The only thing the stripped result lacks is the step/attachment tree, which lives
+     * on disk. Re-attaching the on-disk tree and rewriting yields output identical to the
+     * non-streaming path, with peak heap of one result + one step tree per iteration.
+     */
+    private void mergeExtraIntoTestCases(final List<LaunchResults> launchMetadata,
+                                         final ReportStorage storage) {
+        final com.fasterxml.jackson.databind.ObjectMapper mapper = configuration
+                .requireContext(JacksonContext.class)
+                .getValue();
+        int processed = 0;
+        int failed = 0;
+        for (final LaunchResults launch : launchMetadata) {
+            for (final TestResult stripped : launch.getAllResults()) {
+                final String resourceName = String.format("data/test-cases/%s", stripped.getSource());
+                try {
+                    final byte[] bytes = storage.readDataBinary(resourceName);
+                    final TestResult onDisk = mapper.readValue(bytes, TestResult.class);
+                    stripped.setBeforeStages(onDisk.getBeforeStages());
+                    stripped.setTestStage(onDisk.getTestStage());
+                    stripped.setAfterStages(onDisk.getAfterStages());
+                    storage.addDataJson(resourceName, stripped);
+                    // Re-strip after writing so the step tree doesn't stay reachable through
+                    // the launchMetadata reference. Without this, finalize accumulates every
+                    // result's full step tree in heap (≈ baseline total test-case JSON size,
+                    // ~1.1 GB for the UG-Staging_2 dataset) which causes OOM under 2 GB heap.
+                    stripped.setBeforeStages(new ArrayList<>());
+                    stripped.setTestStage(new StageResult());
+                    stripped.setAfterStages(new ArrayList<>());
+                    processed++;
+                } catch (Exception e) {
+                    failed++;
+                    LOGGER.warn("Could not finalize streaming test case {}: {}",
+                            resourceName, e.getMessage());
+                }
+            }
+        }
+        LOGGER.info("Streaming finalize: rewrote {} test-case files with merged metadata "
+                + "({} failed)", processed, failed);
     }
 
     public void generateSingleFile(final Path outputDirectory, final List<Path> resultsDirectories) {
