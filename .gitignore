@@ -26,3 +26,13 @@ npm-debug.log
 
 #Mac OS stuff
 .DS_Store
+
+#Report
+allure-report*/
+*.txt
+*.png
+*.json
+*.webm
+*.html
+*.attach
+environment.properties
