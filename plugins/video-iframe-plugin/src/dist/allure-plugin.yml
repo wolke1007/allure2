@@ -1,0 +1,4 @@
+id: video-iframe-plugin
+name: Video iframe sizing
+cssFiles:
+  - styles.css

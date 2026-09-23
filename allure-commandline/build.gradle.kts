@@ -121,6 +121,7 @@ dependencies {
     allurePlugin(project(path = ":packages-plugin", configuration = "allurePlugin"))
     allurePlugin(project(path = ":screen-diff-plugin", configuration = "allurePlugin"))
     allurePlugin(project(path = ":trx-plugin", configuration = "allurePlugin"))
+    allurePlugin(project(path = ":video-iframe-plugin", configuration = "allurePlugin"))
     allurePlugin(project(path = ":xctest-plugin", configuration = "allurePlugin"))
     allurePlugin(project(path = ":xray-plugin", configuration = "allurePlugin"))
     allurePlugin(project(path = ":xunit-xml-plugin", configuration = "allurePlugin"))

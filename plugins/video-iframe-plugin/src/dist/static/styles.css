@@ -1,0 +1,5 @@
+.attachment__iframe:not(.attachment__iframe_fullscreen) {
+  height: auto !important;
+  min-height: 240px !important;
+  aspect-ratio: 16 / 9;
+}
